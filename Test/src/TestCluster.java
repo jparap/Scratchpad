@@ -28,7 +28,6 @@ import com.datastax.driver.core.*;
  * @author mark
  * 
  *
- *
  */
 public class TestCluster {
 
