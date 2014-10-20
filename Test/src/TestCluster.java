@@ -79,6 +79,13 @@ public class TestCluster {
 		System.exit(0);
 	}
 
+	/**
+	 * Reads a properties file and returns it as a Map
+	 * 
+	 * @param filePath
+	 * @return
+	 * @throws IOException
+	 */
 	public static Map<String, String> readProperties(String filePath)
 			throws IOException {
 		Properties props = new Properties();
