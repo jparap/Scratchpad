@@ -1,0 +1,3 @@
+Copy all files from a find command
+
+find . -name "system.log.*" -exec cp {} ./temp/ \;
