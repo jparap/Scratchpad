@@ -1,8 +1,6 @@
 #!/bin/bash
 #
-# Looks into the repair sessions started and looks how long it takes them to completion
-#
-# Originally taken from script written by JMP: t12229
+#Looks into the repair sessions started and looks how long it takes them to completion
 #
 # Required: 1 path or file
 
@@ -14,6 +12,10 @@ if [ $# -ne 1 ];then
 	exit 1
 fi
 path1=$1
+for currentFile in $path1*
+do
+	listFiles=$listFiles" "$currentFile
+done
 for someFile in $path1*
 do
 	echo "checking: $someFile"
