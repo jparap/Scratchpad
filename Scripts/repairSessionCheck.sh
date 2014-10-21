@@ -42,7 +42,7 @@ do
 	echo "checking: $someFile"
 	echo "============="
 	let "fileNum += 1"
-	for i in $(egrep RepairSession.java $listFiles | egrep -i  new | sed -e 's/^.*\[repair \(#.*\)\] new .*$/\1/g'); do
+	for i in $(egrep "new session: will sync" $listFiles | egrep -i  new | sed -e 's/^.*\[repair \(#.*\)\] new .*$/\1/g'); do
 		let "passCount += 1"
 		echo -ne "Checking $someFile: $fileNum of $fileCount files, pass $passCount, repair range $i\r"
     		i=${i/\#/}
