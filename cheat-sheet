@@ -1,8 +1,8 @@
-Copy all files from a find command
+# Copy all files from a find command
 
 find . -name "system.log.*" -exec cp {} ./temp/ \;
 
-Check to see if input is an integer
+# Check to see if input is an integer
 
 if [ "$1" -eq "$1" ] 2>/dev/null
 then
