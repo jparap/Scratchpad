@@ -12,3 +12,9 @@ else
     echo $USAGE
     exit 1
 fi
+
+# extend the find command to chain subsequent commands
+# for example, find files and then grep them
+
+find . -type f -name cassandra.yaml -exec sh -c 'echo {} ; grep "flush" {}'  \;
+
