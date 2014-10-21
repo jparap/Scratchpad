@@ -1,3 +1,14 @@
-Copy all files from a find command
+# Copy all files from a find command
 
 find . -name "system.log.*" -exec cp {} ./temp/ \;
+
+# Check to see if input is an integer
+
+if [ "$1" -eq "$1" ] 2>/dev/null
+then
+    echo "$1 is an integer !!"
+else
+    echo "ERROR: first paramter must be an integer."
+    echo $USAGE
+    exit 1
+fi
