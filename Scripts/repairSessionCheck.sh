@@ -4,6 +4,7 @@
 #
 # Required: 1 path or file
 
+# Check arguments
 if [ $# -ne 1 ];then
 	echo "Repair session check"
 	echo ""
@@ -11,11 +12,18 @@ if [ $# -ne 1 ];then
 	echo ""
 	exit 1
 fi
+
+# Setup local variables
 path1=$1
+
+# Find all files in path
 for currentFile in $path1*
 do
 	listFiles=$listFiles" "$currentFile
 done
+
+# Main loop, checks through each file for the evidence of a repair session starting
+# then pulls out the table name, start and end date to get a total elapsed time to report
 for someFile in $path1*
 do
 	echo "checking: $someFile"
