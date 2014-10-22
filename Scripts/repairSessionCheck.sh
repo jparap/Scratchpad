@@ -46,10 +46,12 @@ do
 		let "passCount += 1"
 		echo -ne "Checking $someFile: $fileNum of $fileCount files, pass $passCount, repair range $i\r"
     		i=${i/\#/}
-		start=$(awk '/'${i}'/ && /new session/{print $3,$4,$NF}' $listFiles)
+		session_file=session_$i
+		grep $i $listFiles | awk '{$1=""; print}' > $session_file
+		start=$(awk '/'${i}'/ && /new session/{print $3,$4,$NF}' $session_file)
 		table=${start##* }
 		start=${start% *}
-		ended=$(awk '/'${i}'/ && /completed/{print $3,$4}' $listFiles)
+		ended=$(awk '/'${i}'/ && /completed/{print $3,$4}' $session_file)
 		start1=$(echo ${start} | sed -e 's/[-:]/ /g' -e "s/,/./g" | awk '{print $1"-"$2,$3*86400+$4*3600+$5*60+$6}')
 		ended1=$(echo ${ended} | sed -e 's/[-:]/ /g' -e "s/,/./g" | awk '{print $1"-"$2,$3*86400+$4*3600+$5*60+$6}')
 		timed=$(echo "${start1} ${ended1}" | awk '{print $4-$2}')
