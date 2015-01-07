@@ -3,7 +3,7 @@
 #
 # Script to find cfstats files and collate sstable info for each node
 #
-# v1 - initial version
+# v1.1 - removed the [[:space:]] parts, used double quotes instead
 #
 # Required: 1 path, to find the cfstats files
 # Required: 1 keyspace, to find in the cfstats files
@@ -69,91 +69,59 @@ myValue=$1
 while read someTable 
 do
 	echo -e "\n$someTable"
-	grep -A21 -w "$someTable" ./$myDir/*cfstats | grep -w $myValue | awk -F\: '{print $1,$2,$3}'| awk -F"/" '{print $3}'| awk -F"-" '{print $1,$3}'
-	grep -A21 -w "$someTable" ./$myDir/*cfstats | grep -w $myValue | awk -F\: '{total += $2} END {print "TOTAL",myValue,total}'
+	grep -A21 -w "$someTable" ./$myDir/*cfstats | grep -w "$myValue" | awk -F\: '{print $1,$2,$3}'| awk -F"/" '{print $3}'| awk -F"-" '{print $1,$3}'
+	grep -A21 -w "$someTable" ./$myDir/*cfstats | grep -w "$myValue" | awk -F\: '{total += $2} END {print "TOTAL",myValue,total}'
 done < ./$myDir/uniqueTables
-}
-
-# function to swap out the "space" char in a string for [[:space:]]
-function format {
-myString="$1"
-myNewVal=$(echo $myString | sed -e 's/\ /[[:space:]]/g')
 }
 
 # Find the files and copy to local
 findFiles
 # Find the tables in the given keyspace
 findTables 
+
 # Find all the following values, comment out the ones you dont need
-#
-# So whats with the [[:space:]]? - these are so grep actually looks
-# for the space character, other wise "one two" will match both "one"
-# and "two" which isn't the same as when you run in on the command line
-#
 
+pullStats "SSTable count:"
 
-format "SSTable count:"
-pullStats $myNewVal
+pullStats "Space used (live), bytes:"
 
-format "Space used (live), bytes"
-pullStats $myNewVal
+pullStats "Space used (total), bytes:"
 
-format "Space used (total), bytes:"
-pullStats $myNewVal
+pullStats "SSTable Compression Ratio:"
 
-format "SSTable Compression Ratio:"
-pullStats $myNewVal
-
-format "Number of keys (estimate):"
-pullStats $myNewVal
+pullStats "Number of keys (estimate):"
  
-format "Memtable cell count:"
-pullStats $myNewVal
+pullStats "Memtable cell count:"
 
-format "Memtable data size, bytes:"
-pullStats $myNewVal
+pullStats "Memtable data size, bytes:"
 
-format "Memtable switch count:"
-pullStats $myNewVal
+pullStats "Memtable switch count:"
 
-format "Local read count:"
-pullStats $myNewVal
+pullStats "Local read count:"
 
-format "Local read latency:"
-pullStats $myNewVal
+pullStats "Local read latency:"
 
-format "Local write count:"
-pullStats $myNewVal
+pullStats "Local write count:"
 
-format "Local write latency:"
-pullStats $myNewVal
+pullStats "Local write latency:"
 
-format "Pending tasks:"
-pullStats $myNewVal
+pullStats "Pending tasks:"
 
-format "Bloom filter false positives:"
-pullStats $myNewVal
+pullStats "Bloom filter false positives:"
 
-format "Bloom filter false ratio:"
-pullStats $myNewVal
+pullStats "Bloom filter false ratio:"
 
-format "Bloom filter space used, bytes:"
-pullStats $myNewVal
+pullStats "Bloom filter space used, bytes:"
 
-format "Compacted partition minimum bytes:"
-pullStats $myNewVal
+pullStats "Compacted partition minimum bytes:"
 
-format "Compacted partition maximum bytes:"
-pullStats $myNewVal
+pullStats "Compacted partition maximum bytes:"
 
-format "Compacted partition mean bytes:"
-pullStats $myNewVal
+pullStats "Compacted partition mean bytes:"
 
-format "Average live cells per slice (last five minutes):"
-pullStats $myNewVal
+pullStats "Average live cells per slice (last five minutes):"
 
-format "Average tombstones per slice (last five minutes):"
-pullStats $myNewVal
+pullStats "Average tombstones per slice (last five minutes):"
 
 exit 
 
