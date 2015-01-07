@@ -3,6 +3,8 @@
 #
 # Script to find cfstats files and collate sstable info for each node
 #
+# v1 - initial version
+#
 # Required: 1 path, to find the cfstats files
 # Required: 1 keyspace, to find in the cfstats files
 
