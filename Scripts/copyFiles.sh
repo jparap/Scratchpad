@@ -27,9 +27,12 @@ myFile=$2
 function findFiles {
 for someFile in $(find $path1 -name $myFile)
 do
-	newFileName=$(echo $someFile | awk -F "nodes/" '{print $2}' | awk -F\/ '{print $1"-"$(NF)}'| awk -F\- '{print $(NF-1)"-"$(NF)}') # Strip ip from path
-	cp $someFile $newFileName # Copy the file to the new filename
+	currentFileName=$(basename $someFile)
+	currentPathName=$(dirname $someFile)
+	newPathName=$(echo $currentPathName | awk -F "nodes/" '{print $2}' | awk -F\/ '{print $1}'| awk -F\- '{print $(NF)}') # Strip ip from path
+	newFileName="$newPathName-$currentFileName"
 	echo "Copying $someFile to $newFileName"
+	cp $someFile $newFileName # Copy the file to the new filename
 done
 }
 
