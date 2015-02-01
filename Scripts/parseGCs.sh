@@ -21,7 +21,7 @@ cmsFile=cmsEvents.txt
 parFile=parEvents.txt
 tempWorkFile=temp.txt
 
-
+# function to find cms events and parse them out to a file
 function findCms { 
 myPath=$1
 myPrefix=$2
@@ -41,6 +41,7 @@ cat $tempWorkFile | sort -k1 >> $cmsFile
 cat /dev/null > $tempWorkFile
 }
  
+# function to find parnew events and parse them out to a file
 function findParNew { 
 myPath=$1
 myPrefix=$2
