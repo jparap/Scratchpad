@@ -2,13 +2,14 @@
 
 #
 # Script to find GC events
+# with times of occurance too
 #
 # Required: 1 path, to find log files
 # Required: 1 prefix for filename
 #
-# The script will parse a bunch of log files in a
+# The script will parse a bunch of log files in a 
 # given directory and pull out the max and min GC
-# Cms and ParNew events
+# Cms and ParNew events along with the time and date
 #
 # Alter the local variables below to configure
 # file names.
@@ -29,8 +30,8 @@ fi
 # Setup local variables
 path=$1
 prefix=$2
-cmsFile=cmsEvents.txt
-parFile=parEvents.txt
+cmsFile=cmsEventsAndTimes.txt
+parFile=parEventsAndTimes.txt
 tempWorkFile=temp.txt
 
 # function to find cms events and parse them out to a file
@@ -43,22 +44,26 @@ do
 	awk ' \
 		{if (gcMax[$1] < $12) \
 			{gcMax[$1]=$12; \
-			} \
+			myDate[$1]=$4; \
+			sub(/,/,".",$5); 
+			myTime[$1]=$5}
 		} \
 		END \
 		{for(i in gcMax) 
-			{print gcMax[i]}
+			{print myDate[i]","myTime[i]","gcMax[i]}
 		}')
 
 	min=$(grep -H "GC for Concurrent" $someFile | \
 	awk ' \
 		{if (gcMin[$1] > $12 || gcMin[$1]==0) \
 			{gcMin[$1]=$12; \
-			} \
+			myDate[$1]=$4; \
+			sub(/,/,".",$5); \
+			myTime[$1]=$5} \
 		} \
 		END \
 		{for(i in gcMin) \
-			{print gcMin[i]} \
+			{print myDate[i]","myTime[i]","gcMin[i]} \
 		}')
 
 	if [ -z $min ];then
@@ -67,9 +72,9 @@ do
 		echo -e "$someFile,$max,$min" >> $tempWorkFile
 	fi
 done
-echo -e "filename,max (ms),min (ms)" > $cmsFile
+echo -e "filename,max date,max time,max (ms),min date, min time,min (ms)" > $cmsFile
 echo -e "" >> $cmsFile
-cat $tempWorkFile | sort -t, -rg -k2 >> $cmsFile
+cat $tempWorkFile | sort -t, -rg -k4 >> $cmsFile
 cat /dev/null > $tempWorkFile
 }
  
@@ -83,22 +88,26 @@ do
 	awk ' \
 		{if (gcMax[$1] < $12) \
 			{gcMax[$1]=$12; \
-			} \
+			myDate[$1]=$4; \
+			sub(/,/,".",$5); \
+			myTime[$1]=$5} \
 		} \
 		END \
 		{for(i in gcMax) \
-			{print gcMax[i]}
+			{print myDate[i]","myTime[i]","gcMax[i];}
 		}')
 
 	min=$(grep -H "GC for ParNew" $someFile | \
 	awk ' \
 		{if (gcMin[$1] > $12 || gcMin[$1]==0) \
 			{gcMin[$1]=$12; \
-			} \
+			myDate[$1]=$4; \
+			sub(/,/,".",$5); \
+			myTime[$1]=$5} \
 		} \
 		END \
 		{for(i in gcMin) \
-			{print gcMin[i]} \
+			{print myDate[i]","myTime[i]","gcMin[i];} \
 		}')
 
 	if [ -z $min ];then
@@ -107,9 +116,9 @@ do
 		echo -e "$someFile,$max,$min" >> $tempWorkFile
 	fi
 done
-echo -e "filename,max (ms),min (ms)" > $parFile
+echo -e "filename,max date,max time,max (ms),min date, min time,min (ms)" > $parFile
 echo -e "" >> $parFile
-cat $tempWorkFile | sort -t, -rg -k2 >> $parFile
+cat $tempWorkFile | sort -t, -rg -k4 >> $parFile
 cat /dev/null > $tempWorkFile
 }
 
