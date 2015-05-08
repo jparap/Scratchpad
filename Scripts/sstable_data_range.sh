@@ -4,9 +4,8 @@
 #
 # Required:
 # 1 - path to sstables
-#
-#
 
+# Check arguments
 if [ $# -ne 1 ];then
         echo "fimd date range of sstables"
         echo ""
@@ -18,6 +17,11 @@ fi
 path=$1
 myfile="*Data*"
 
+# Print header
+echo -e "File\tMin date\tMax date"
+
+
+# Loop through files and extract timestamps etc
 for somefile in $(find $path -maxdepth 1 -name "*Data*")
 do
     mints=$(sstablemetadata $somefile | grep "Minimum timestamp:")
