@@ -3,28 +3,24 @@
 #
 # Script to find cfstats files and collate sstable info for each node
 #
-# v1.1 - removed the [[:space:]] parts, used double quotes instead
-#
 # Required: 1 path, to find the cfstats files
 # Required: 1 keyspace, to find in the cfstats files
-
-if [ $# -ne 2 ];then
+if [ $# -ne 3 ];then
 	echo "Find cfstats files and collate"
 	echo ""
-	echo "Useage: $0 <path> <keyspace>"
+	echo "Useage: $0 <path> <filename> <keyspace>"
 	echo ""
-	exit 1
+	exit
 fi
 
-# 1. Find all cfstats files and copy into local dir
-# 2. Find all table names in given keyspace
-# 3. For each table check each cfstats file for all parameters
+# 1. Find all table names in given keyspace
+# 2. For each table check each cfstats file for all parameters
 
 # Setup local variables
-path1=$1
-myFile=cfstats
+myPath=$1
+myFile=$2
 myDir=workingFiles
-myKeyspace=$2
+myKeyspace=$3
 
 # create local workingFiles dir
 if [ ! -d ./$myDir ]
@@ -32,35 +28,58 @@ then
 	mkdir -p ./$myDir
 fi
 
-# function to find given files and copy to local dir with the node ip prefix 
-function findFiles {
-for someFile in $(find $path1 -name $myFile)
-do
-	currentFile=$(basename $someFile) # Strip filename from path
-	currentPath=$(dirname $someFile) # Strip path only
-	nodeIp=$(echo $currentPath | awk -F\- '{print $(NF)}'| awk -F\/ '{print $(NF-1)}') # Strip ip from path
-	newFileName="$myDir/$nodeIp-$currentFile" # make a new file name with the IP
-	cp $someFile $newFileName # Copy the cfstats file to the new filename
-	echo "Copying $someFile to $newFileName"
-done
-}
+# warn & exit if working directory is not empty
+if [ "$(ls -A $myDir)" ]
+then
+    echo "$myDir is not empty. Exiting"
+    exit
+fi
 
 # function to find all table names in a given keyspace
 function findTables {
-for someFile in $(find ./$myDir -name "*cfstats")
+for someFile in $(find ./$myPath -name "$myFile")
 do
-	i=$((i+1))
-	tableName=./$myDir/tables$i
-	# Note using single quotes prevents variable expansion this had me going for a while!
-	#tableName=$(sed -n '/^Keyspace: $myKeyspace/,/^Keyspace/p' $someFile | grep "Table:")
-	sed -n "/^Keyspace: $myKeyspace/,/^Keyspace/p" $someFile | grep "Table:" > $tableName # Get all tables in the Keyspace
+    i=$((i+1))
+    tbName=./$myDir/tbs$i
+    cfName=./$myDir/cfs$i
+    # Note using single quotes prevents variable expansion this had me going for a while!
+    # "Table" for later versions of cassandra
+    sed -n "/^Keyspace: $myKeyspace/,/^Keyspace/p" $someFile | grep "Table:" > $tbName # Get all tables in the Keyspace
+    # "Column Family:" for earlier versions of cassandra
+    sed -n "/^Column Family: $myKeyspace/,/^Keyspace/p" $someFile | grep "Column Family:" > $cfName # Get all tables in the Keyspace
+    # decide if there were column families or tables found
+    if grep -q "Table:" $someFile
+    then
+       ftb=true
+    fi
+    # decide if there were column families or tables found
+    if grep -q "Column Family:" $someFile
+    then
+       fcf=true
+    fi
 done
+# warn & exit if both table types were found, there should only be one type
+if [ $ftb -a $fcf ]
+then
+    echo "Found column family and table syntax in files. Exiting"
+    exit
+fi
+
 # Cat all resulting files and then sort uniquely to get all the tables. The order isnt really important
-for someFile in $(find ./$myDir -name "tables*")
-do
-	cat $someFile >> $myDir/allTables
-done
-cat $myDir/allTables | sort -u > $myDir/uniqueTables
+if [ $ftb ]
+then
+    for someFile in $(find ./$myDir -name "tbs*")
+    do
+        cat $someFile >> $myDir/allTables
+    done
+    cat $myDir/allTables | sort -u > $myDir/uniqueTables
+elif [ $fcf ]
+then
+    for someFile in $(find ./$myDir -name "cfs*")
+    do
+        cat $someFile >> $myDir/allTables
+    done
+fi
 }
 
 # function to pull out all stats from a given table
@@ -69,59 +88,65 @@ myValue=$1
 while read someTable 
 do
 	echo -e "\n$someTable"
-	grep -A21 -w "$someTable" ./$myDir/*cfstats | grep -w "$myValue" | awk -F\: '{print $1,$2,$3}'| awk -F"/" '{print $3}'| awk -F"-" '{print $1,$3}'
-	grep -A21 -w "$someTable" ./$myDir/*cfstats | grep -w "$myValue" | awk -F\: '{total += $2} END {print "TOTAL",myValue,total}'
+	grep -A25 -w "$someTable" ./$myPath/$myFile | grep -w "$myValue" | awk -F\: '{print $1,$2,$3}'
+	grep -A25 -w "$someTable" ./$myPath/$myFile | grep -w "$myValue" | awk -F\: '{total += $2} END {print "TOTAL",myValue,total}'
 done < ./$myDir/uniqueTables
 }
 
-# Find the files and copy to local
-findFiles
 # Find the tables in the given keyspace
 findTables 
-
 # Find all the following values, comment out the ones you dont need
 
-pullStats "SSTable count:"
-
-pullStats "Space used (live), bytes:"
-
-pullStats "Space used (total), bytes:"
-
-pullStats "SSTable Compression Ratio:"
-
-pullStats "Number of keys (estimate):"
- 
-pullStats "Memtable cell count:"
-
-pullStats "Memtable data size, bytes:"
-
-pullStats "Memtable switch count:"
-
-pullStats "Local read count:"
-
-pullStats "Local read latency:"
-
-pullStats "Local write count:"
-
-pullStats "Local write latency:"
-
-pullStats "Pending tasks:"
-
-pullStats "Bloom filter false positives:"
-
-pullStats "Bloom filter false ratio:"
-
-pullStats "Bloom filter space used, bytes:"
-
-pullStats "Compacted partition minimum bytes:"
-
-pullStats "Compacted partition maximum bytes:"
-
-pullStats "Compacted partition mean bytes:"
-
-pullStats "Average live cells per slice (last five minutes):"
-
-pullStats "Average tombstones per slice (last five minutes):"
-
-exit 
-
+if [ $ftb=true ]
+then
+    # Newer format "Table:"
+    pullStats "SSTable count:"
+    pullStats "Space used (live), bytes:"
+    pullStats "Space used (total), bytes:"
+    pullStats "Off heap memory used (total), bytes:"
+    pullStats "SSTable Compression Ratio:"
+    pullStats "Number of keys (estimate):"
+    pullStats "Memtable cell count:"
+    pullStats "Memtable data size, bytes:"
+    pullStats "Memtable switch count:"
+    pullStats "Local read count:"
+    pullStats "Local read latency:"
+    pullStats "Local write count:"
+    pullStats "Local write latency:"
+    pullStats "Pending tasks:"
+    pullStats "Bloom filter false positives:"
+    pullStats "Bloom filter false ratio:"
+    pullStats "Bloom filter space used, bytes:"
+    pullStats "Bloom filter off heap memory used, bytes:"
+    pullStats "Index summary off heap memory used, bytes:"
+    pullStats "Compression metadata off heap memory used, bytes:"
+    pullStats "Compacted partition minimum bytes:"
+    pullStats "Compacted partition maximum bytes:"
+    pullStats "Compacted partition mean bytes:"
+    pullStats "Average live cells per slice (last five minutes):"
+    pullStats "Average tombstones per slice (last five minutes):"
+elif [ $fcf=true ]
+then
+    # Older format "Column family:"
+    pullStats "Space used (live):"
+    pullStats "Space used (total):"
+    pullStats "SSTable Compression Ratio:"
+    pullStats "Number of Keys (estimate):"
+    pullStats "Memtable Columns Count:"
+    pullStats "Memtable Data Size:"
+    pullStats "Memtable Switch Count:"
+    pullStats "Read Count:"
+    pullStats "Read Latency:"
+    pullStats "Write Count:"
+    pullStats "Write Latency:"
+    pullStats "Pending Tasks:"
+    pullStats "Bloom Filter False Positives:"
+    pullStats "Bloom Filter False Ratio:"
+    pullStats "Bloom Filter Space Used:"
+    pullStats "Compacted row minimum size:"
+    pullStats "Compacted row maximum size:"
+    pullStats "Compacted row mean size:"
+    pullStats "Average live cells per slice (last five minutes):"
+    pullStats "Average tombstones per slice (last five minutes):"
+fi
+exit
