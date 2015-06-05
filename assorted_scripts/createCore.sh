@@ -3,7 +3,7 @@
 # Edit for the solrconfig.xml and schema.xml files
 
 if [ $# -ne 1 ];then
-	echo "Create solr cre"
+	echo "Create solr core"
 	echo ""
 	echo "Useage: $0 <keyspace>"
 	echo ""
