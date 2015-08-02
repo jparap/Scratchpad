@@ -10,6 +10,7 @@ if [ $# -ne 3 ];then
 	echo ""
 	echo "Useage: $0 <path> <filename> <keyspace>"
 	echo ""
+	echo "Note: for filename please put any wilcards inside double quotes"
 	exit
 fi
 
