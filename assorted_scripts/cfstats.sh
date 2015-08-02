@@ -88,8 +88,9 @@ function pullStats {
 myValue=$1
 while read someTable 
 do
-	echo -e "\n$someTable"
-	grep -A25 -w "$someTable" ./$myPath/$myFile | grep -w "$myValue" | awk -F\: '{print $1,$2,$3}'
+	echo -e "\n$someTable - $myValue"
+	echo -e "======================="
+ 	grep -A25 -w "$someTable" ./$myPath/$myFile | grep -w "$myValue" | awk -F\: '{print $1,$2,$3}'
 	grep -A25 -w "$someTable" ./$myPath/$myFile | grep -w "$myValue" | awk -F\: '{total += $2} END {print "TOTAL",myValue,total}'
 done < ./$myDir/uniqueTables
 }
@@ -104,17 +105,20 @@ then
     pullStats "SSTable count:"
     pullStats "Space used (live), bytes:"
     pullStats "Space used (total), bytes:"
+    pullStats "Space used by snapshots (total):"
     pullStats "Off heap memory used (total), bytes:"
     pullStats "SSTable Compression Ratio:"
     pullStats "Number of keys (estimate):"
     pullStats "Memtable cell count:"
     pullStats "Memtable data size, bytes:"
+    pullStats "Memtable off heap memory used:"
     pullStats "Memtable switch count:"
     pullStats "Local read count:"
     pullStats "Local read latency:"
     pullStats "Local write count:"
     pullStats "Local write latency:"
     pullStats "Pending tasks:"
+    pullStats "Pending flushes:"
     pullStats "Bloom filter false positives:"
     pullStats "Bloom filter false ratio:"
     pullStats "Bloom filter space used, bytes:"
@@ -125,7 +129,9 @@ then
     pullStats "Compacted partition maximum bytes:"
     pullStats "Compacted partition mean bytes:"
     pullStats "Average live cells per slice (last five minutes):"
+    pullStats "Maximum live cells per slice (last five minutes):"
     pullStats "Average tombstones per slice (last five minutes):"
+    pullStats "Maximum tombstones per slice (last five minutes):"
 elif [ $fcf=true ]
 then
     # Older format "Column family:"
