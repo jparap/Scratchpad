@@ -86,13 +86,16 @@ fi
 # function to pull out all stats from a given table
 function pullStats {
 myValue=$1
-while read someTable 
+for someFile in $(find ./$myPath -name "$myFile")
 do
-	echo -e "\n$someTable - $myValue"
+    while read someTable 
+    do
+        echo -e "\n$someTable - $myValue"
 	echo -e "======================="
- 	grep -A25 -w "$someTable" ./$myPath/$myFile | grep -w "$myValue" | awk -F\: '{print $1,$2,$3}'
-	grep -A25 -w "$someTable" ./$myPath/$myFile | grep -w "$myValue" | awk -F\: '{total += $2} END {print "TOTAL",myValue,total}'
-done < ./$myDir/uniqueTables
+ 	grep -A25 -w "$someTable" $someFile | grep -w "$myValue" | awk -F\: '{print $1,$2,$3}'
+	grep -A25 -w "$someTable" $someFile | grep -w "$myValue" | awk -F\: '{total += $2} END {print "TOTAL",myValue,total}'
+    done < ./$myDir/uniqueTables
+done
 }
 
 # Find the tables in the given keyspace
