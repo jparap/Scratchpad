@@ -13,4 +13,4 @@ keyspace=$1
 table=$2
 curl http://localhost:8983/solr/resource/$keyspace.$table/solrconfig.xml --data-binary @solrconfig-test.xml -H 'Content-type:text/xml; charset=utf-8'
 curl http://localhost:8983/solr/resource/$keyspace.$table/schema.xml --data-binary @schema-test.xml -H 'Content-type:text/xml; charset=utf-8'
-curl "http://localhost:8983/solr/admin/cores?action=CREATE&name=$keyspace.$table"
+curl http://localhost:8983/solr/admin/cores?action=CREATE&name=$keyspace.$table
