@@ -11,6 +11,7 @@ if [ $# -ne 3 ];then
 	echo "Useage: $0 <path> <filename> <keyspace>"
 	echo ""
 	echo "Note: for filename please put any wilcards inside double quotes"
+	echo "Note: script must be run in nodes directory"
 	exit
 fi
 
@@ -36,7 +37,18 @@ then
     exit
 fi
 
+# function to check we are in the nodes directory of the
+# diagnostic report. This is important as the script needs
+# to copy all the cfstats files into the working files dir
+currentDir=$(pwd |  awk -F'/' '{print $NF}')
+if [ $currentDir != "nodes" ]
+then
+    echo "This script must only be run in the nodes directory of a diagnostics report"
+    exit
+fi
+
 # function to find all table names in a given keyspace
+# also copy the cfstats files to the working directory
 function findTables {
 for someFile in $(find ./$myPath -name "$myFile")
 do
@@ -58,7 +70,12 @@ do
     then
        fcf=true
     fi
+    # Script must be run in nodes directory to get node name prefix on file
+    node_cfstats=$(dirname $someFile | awk -F "/" '{print $3"-cfstats"}')
+    # Copy the cfstats file with the node prefix into the workingFiles directory
+    cp $someFile $myDir/$node_cfstats
 done
+
 # warn & exit if both table types were found, there should only be one type
 if [ $ftb -a $fcf ]
 then
@@ -86,22 +103,20 @@ fi
 # function to pull out all stats from a given table
 function pullStats {
 myValue=$1
-for someFile in $(find ./$myPath -name "$myFile")
+while read someTable 
 do
-    while read someTable 
-    do
-        echo -e "\n$someTable - $myValue"
-	echo -e "======================="
- 	grep -A25 -w "$someTable" $someFile | grep -w "$myValue" | awk -F\: '{print $1,$2,$3}'
-	grep -A25 -w "$someTable" $someFile | grep -w "$myValue" | awk -F\: '{total += $2} END {print "TOTAL",myValue,total}'
-    done < ./$myDir/uniqueTables
-done
+    echo -e "\n$someTable - $myValue"
+    echo -e "======================="
+    grep -A25 -w "$someTable" $myDir/*cfstats | grep -w "$myValue" | awk -F\: '{print $1,$2,$3}'
+    grep -A25 -w "$someTable" $myDir/*cfstats | grep -w "$myValue" | awk -F\: '{total += $2} END {print "TOTAL",myValue,total}'
+done < ./$myDir/uniqueTables
 }
+
 
 # Find the tables in the given keyspace
 findTables 
-# Find all the following values, comment out the ones you dont need
 
+# Find all the following values, comment out the ones you dont need
 if [ $ftb=true ]
 then
     # Newer format "Table:"
